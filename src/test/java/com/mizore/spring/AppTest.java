@@ -1,5 +1,7 @@
 package com.mizore.spring;
 
+import com.mizore.spring.beans.factory.config.BeanDefinition;
+import com.mizore.spring.beans.factory.support.DefaultListableBeanFactory;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -37,12 +39,12 @@ public class AppTest
     }
 
     public void testBean() {
-        BeanDefinition beanDefinition = new BeanDefinition(new UserService());
-        BeanFactory beanFactory = new BeanFactory();
-        String name = "userService";
-        beanFactory.registerBeanDefinition(name, beanDefinition);
-        UserService bean = (UserService) beanFactory.getBean(name);
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+        beanFactory.registryBeanDefinition("UserService",new BeanDefinition(UserService.class));
+        UserService bean = (UserService) beanFactory.getBean("UserService");
         bean.query();
+        UserService beanSingleton = (UserService) beanFactory.getBean("UserService");
+        beanSingleton.query();
 
     }
 }
