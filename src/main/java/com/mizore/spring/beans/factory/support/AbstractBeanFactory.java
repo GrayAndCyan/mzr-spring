@@ -23,10 +23,24 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         // 未获取到单例bean对象，拿到bean定义去实例化bean
         BeanDefinition beanDefinition = getBeanDefinition(name);
 
-        return createBean(name, beanDefinition);
+        return createBean(name, beanDefinition, null);
     }
 
-    protected abstract Object createBean(String name, BeanDefinition beanDefinition);
+    @Override
+    public Object getBean(String name, Object... args) {
+        // 在DefaultSingletonBeanRegistry的缓存中获取单例bean对象
+        if (containsSingleton(name)) {
+            log.info("获取到缓存的单例bean对象。");
+            return getSingleton(name);
+        }
+
+        // 未获取到单例bean对象，拿到bean定义去实例化bean
+        BeanDefinition beanDefinition = getBeanDefinition(name);
+
+        return createBean(name, beanDefinition, args);
+    }
+
+    protected abstract Object createBean(String name, BeanDefinition beanDefinition, Object[] args);
 
     protected abstract BeanDefinition getBeanDefinition(String name);
 

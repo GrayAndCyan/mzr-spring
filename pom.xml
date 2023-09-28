@@ -13,7 +13,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>17</maven.compiler.source>
-    <maven.complier.target>17</maven.complier.target>
+    <maven.compiler.target>17</maven.compiler.target>
+
   </properties>
 
   <dependencies>
@@ -34,6 +35,18 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <version>1.4.11</version>
+    </dependency>
+
+    <dependency>
+      <groupId>cglib</groupId>
+      <artifactId>cglib</artifactId>
+      <version>3.3.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>cn.hutool</groupId>
+      <artifactId>hutool-all</artifactId>
+      <version>5.7.17</version>
     </dependency>
   </dependencies>
 </project>
