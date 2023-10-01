@@ -11,9 +11,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Unit test for simple App.
@@ -109,8 +107,11 @@ public class AppTest
         UserService userService = (UserService) beanFactory.getBean("userService");
         userService.query();
         UserService userService2 = (UserService) beanFactory.getBean("userService");
-        System.out.println(userService2.userDao.queryUserName("10001"));
-        System.out.println(userService2.name);
+//        System.out.println(userService2.userDao.queryUserName("10001"));
+//        System.out.println(userService2.name);
         System.out.println(userService2.equals(userService));
     }
+
+
+
 }

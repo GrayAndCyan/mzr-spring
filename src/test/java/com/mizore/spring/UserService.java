@@ -3,11 +3,14 @@ package com.mizore.spring;
 
 public class UserService {
 
-    UserDao userDao;
+    private UserDao userDao;
 
-    String name;
+    private String name;
+
+    private String uId;
     public void query() {
         System.out.println("query user...");
+        System.out.println(userDao.queryUserName(uId));
     }
 
     @Override

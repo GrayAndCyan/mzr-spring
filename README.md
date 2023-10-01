@@ -11,9 +11,19 @@
 
 ### step-03
 * 实现含参构造器实例化bean,根据传入的参数粗略寻找匹配的构造器（未比对参数类型，仅根据参数数量来匹配）。
-* 采用策略模式，提供jdk反射与cjlib两种方式创建实例。但cjlib创建实例方案在jdk17下不能正常使用，未解决。
+* 采用策略模式，提供jdk反射与cjlib两种方式创建实例。但cjlib创建实例方案在jdk17+无法使用下面是cglib官方给出的说明：
+
+>IMPORTANT NOTE: cglib is unmaintained and does not work well (or possibly at all?) in newer JDKs, particularly JDK17+. If you need to support newer JDKs, we will accept well-tested well-thought-out patches... but you'll probably have better luck migrating to something like ByteBuddy.
+
+因此增加基于`ByteBuddy`的bean实例化策略类`ByteBuddySubClassingInstantiationStrategy`。
 
 ### step-04
 * 支持bean的属性与依赖注入。
 * 在`BeanDefinition`中添加`PropertyValues`属性，表面bean需要注入的属性。
 * 在属性注入时，属性分为两种，bean属性与其他属性。前者即当前bean对象依赖其他bean对象。bean属性使用`BeanReference`类型，该类型有一个`beanName`字段，表明了被依赖的bean的name。
+
+
+### step-05
+添加资源加载和XML文件解析实现，在`core.io`包下定义资源与资源加载器相关接口与实现类。资源加载器通过资源定位信息参数，返回具体资源。
+bean定义读取器依赖资源加载器与注册器，通过加载器拿到资源后，从资源文件中读取bean定义，并通过注册器注册bean定义，放入IoC容器。
+在首次获取这个bean时去实例化它，并放入单例缓存Map。

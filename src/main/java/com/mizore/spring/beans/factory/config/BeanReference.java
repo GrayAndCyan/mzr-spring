@@ -1,7 +1,7 @@
 package com.mizore.spring.beans.factory.config;
 
 /**
- * Bean引用类型，bean被其他类依赖时，这个属性的类型，指向被依赖bean的name
+ * Bean引用类型，bean被其他类依赖时，这个属性的类型。指向被依赖bean的name
  */
 public class BeanReference {
     private String beanName;

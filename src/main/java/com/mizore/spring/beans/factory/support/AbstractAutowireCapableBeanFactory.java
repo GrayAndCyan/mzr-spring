@@ -10,14 +10,14 @@ import com.mizore.spring.beans.factory.config.BeanDefinition;
 import com.mizore.spring.beans.factory.config.BeanReference;
 
 import java.lang.reflect.Constructor;
-import java.util.HashMap;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * 实例化bean类
  */
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory{
 
-    private final InstantiationStrategy instantiationStrategy = new SimpleInstantiationStrategy();
+    private final InstantiationStrategy instantiationStrategy = new ByteBuddySubClassingInstantiationStrategy();
     @Override
     protected Object createBean(String name, BeanDefinition beanDefinition, Object[] args) {
         Object beanObject;
@@ -52,7 +52,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         }
     }
 
-    protected Object createBeanInstance(String name, BeanDefinition beanDefinition, Object[] args) {
+    protected Object createBeanInstance(String name, BeanDefinition beanDefinition, Object[] args) throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
         Object beanObject;
         Constructor constructorToUse = null;
         // 根据args查询合适的构造器
