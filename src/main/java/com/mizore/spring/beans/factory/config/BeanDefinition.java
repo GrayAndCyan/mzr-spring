@@ -1,6 +1,6 @@
 package com.mizore.spring.beans.factory.config;
 
-import com.mizore.spring.beans.factory.PropertyValues;
+import com.mizore.spring.beans.PropertyValues;
 
 public class BeanDefinition {
 

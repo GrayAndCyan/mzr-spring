@@ -24,6 +24,23 @@
 
 
 ### step-05
-添加资源加载和XML文件解析实现，在`core.io`包下定义资源与资源加载器相关接口与实现类。资源加载器通过资源定位信息参数，返回具体资源。
-bean定义读取器依赖资源加载器与注册器，通过加载器拿到资源后，从资源文件中读取bean定义，并通过注册器注册bean定义，放入IoC容器。
+* 添加资源加载和XML文件解析实现，在`core.io`包下定义资源与资源加载器相关接口与实现类。资源加载器通过资源定位信息参数，返回具体资源。
+bean定义读取器依赖资源加载器与注册表，通过加载器拿到资源后，从资源文件中读取bean定义，并通过注册表注册bean定义，放入IoC容器。
 在首次获取这个bean时去实例化它，并放入单例缓存Map。
+* 接口：`BeanDefinitionReader`、抽象类：`AbstractBeanDefinitionReader`、实现类：`XmlBeanDefinitionReader`，
+这三部分内容主要是合理清晰的处理了资源读取后的注册 `Bean` 容器操作。
+接口管定义，抽象类处理非接口功能外的注册 `Bean` 组件填充，最终实现类即可只关心具体的业务实现。
+
+### step-06  应用上下文
+
+* 完成`ClassPathXmlApplicationContext`类及其继承体系的编写:
+    ![ClassPathXmlApplicationContext.png](img%2FClassPathXmlApplicationContext.png)
+  `ClassPathXmlApplicationContext`类接收资源地址，并调用`refresh()`方法完成一系列操作，包括：
+  1. bean工厂的创建；
+  2. 资源的读取，读取开发者配置的bean定义，加载这些bean定义到上一步创建的bean工厂；
+  3. 在Bean实例化之前，执行BeanFactoryPostProcessor的处理方法;
+  4. 注册BeanPostProcessor；
+  5. 提前实例化一遍`beanDefinitionMap`中定义的bean。
+* 定义Spring中两个重要接口`BeanFactoryPostProcessor` 与`BeanPostProcessor`，
+它们实现类的处理方法分别在「`Bean` 对象注册后但实例化之前」和「`Bean` 对象实例化并属性注入之后，执行初始化方法前后」时执行。
+分别体现在`AbstractApplicationContext`类和`AbstractAutowireCapableBeanFactory`类中。

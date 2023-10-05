@@ -1,4 +1,4 @@
-package com.mizore.spring.beans.factory;
+package com.mizore.spring.beans;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -7,4 +7,7 @@
         <property name="location" value="深圳"/>
         <property name="userDao" ref="userDao"/>
     </bean>
+    <bean class="com.mizore.spring.test.common.MyBeanFactoryPostProcessor"/>
+    <bean class="com.mizore.spring.test.common.MyBeanPostProcessor"/>
+"/>
 </beans>

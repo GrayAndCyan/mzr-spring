@@ -1,12 +1,11 @@
 package com.mizore.spring.beans.factory.xml;
 
-import cn.hutool.core.io.resource.FileObjectResource;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.XmlUtil;
 import com.mizore.spring.beans.BeansException;
 import com.mizore.spring.beans.core.io.Resource;
 import com.mizore.spring.beans.core.io.ResourceLoader;
-import com.mizore.spring.beans.factory.PropertyValue;
+import com.mizore.spring.beans.PropertyValue;
 import com.mizore.spring.beans.factory.config.BeanDefinition;
 import com.mizore.spring.beans.factory.config.BeanReference;
 import com.mizore.spring.beans.factory.support.AbstractBeanDefinitionReader;
@@ -49,6 +48,13 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
         ResourceLoader resourceLoader = getResourceLoader();
         Resource resource = resourceLoader.getResource(location);
         loadBeanDefinitions(resource);
+    }
+
+    @Override
+    public void loadBeanDefinitions(String[] locations) {
+        for (String location : locations) {
+            loadBeanDefinitions(location);
+        }
     }
 
     protected void doLoadBeanDefinition(InputStream inputStream) throws ClassNotFoundException {

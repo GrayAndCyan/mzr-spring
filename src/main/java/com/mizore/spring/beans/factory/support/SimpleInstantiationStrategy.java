@@ -11,7 +11,7 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
     @Override
     public Object instantiate(BeanDefinition beanDefinition, String beanName, Constructor constructor, Object[] args) {
         Class beanClass = beanDefinition.getBeanClass();
-        Object instance = null;
+        Object instance;
         try {
             if (constructor == null) {
                 // 无参构造

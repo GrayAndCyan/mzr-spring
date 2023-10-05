@@ -1,11 +1,14 @@
-package com.mizore.spring;
+package com.mizore.spring.test;
 
-import com.mizore.spring.beans.factory.BeanFactory;
-import com.mizore.spring.beans.factory.PropertyValue;
-import com.mizore.spring.beans.factory.PropertyValues;
+import cn.hutool.core.bean.BeanUtil;
+import com.mizore.spring.beans.PropertyValue;
+import com.mizore.spring.beans.PropertyValues;
 import com.mizore.spring.beans.factory.config.BeanDefinition;
 import com.mizore.spring.beans.factory.config.BeanReference;
 import com.mizore.spring.beans.factory.support.DefaultListableBeanFactory;
+import com.mizore.spring.test.bean.User;
+import com.mizore.spring.test.bean.UserDao;
+import com.mizore.spring.test.bean.UserService;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -110,6 +113,12 @@ public class AppTest
 //        System.out.println(userService2.userDao.queryUserName("10001"));
 //        System.out.println(userService2.name);
         System.out.println(userService2.equals(userService));
+    }
+
+    public void testSetField() {
+        User user = new User();
+        BeanUtil.setFieldValue(user, "username", "mizore");
+        System.out.println(user);
     }
 
 

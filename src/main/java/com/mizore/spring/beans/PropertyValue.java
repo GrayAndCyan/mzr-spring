@@ -1,4 +1,4 @@
-package com.mizore.spring.beans.factory;
+package com.mizore.spring.beans;
 
 public class PropertyValue {
     private String name;

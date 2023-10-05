@@ -18,6 +18,7 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
         this.registry = registry;
     }
 
+    // 属于非接口功能，在抽象类中实现
     @Override
     public ResourceLoader getResourceLoader() {
         return this.resourceLoader;

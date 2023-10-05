@@ -1,4 +1,4 @@
-package com.mizore.spring;
+package com.mizore.spring.test.bean;
 
 import java.util.HashMap;
 import java.util.Map;
