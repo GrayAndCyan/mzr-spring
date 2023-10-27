@@ -3,19 +3,26 @@ package com.mizore.spring.beans.factory.support;
 
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.mizore.spring.beans.BeansException;
 import com.mizore.spring.beans.PropertyValue;
 import com.mizore.spring.beans.PropertyValues;
+import com.mizore.spring.beans.factory.DisposableBean;
+import com.mizore.spring.beans.factory.InitializingBean;
 import com.mizore.spring.beans.factory.config.AutowireCapableBeanFactory;
 import com.mizore.spring.beans.factory.config.BeanDefinition;
 import com.mizore.spring.beans.factory.config.BeanPostProcessor;
 import com.mizore.spring.beans.factory.config.BeanReference;
+import lombok.extern.slf4j.Slf4j;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * 实例化bean类
  */
+@Slf4j
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements AutowireCapableBeanFactory {
 
     private InstantiationStrategy instantiationStrategy = new ByteBuddySubClassingInstantiationStrategy();
@@ -32,10 +39,19 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         } catch (Exception e) {
             throw new BeansException("Instantiation of bean failed",e);
         }
+        // 注册实现了DisposableBean接口的对象
+        registerDisposableBeanIfNecessary(beanName,beanObject, beanDefinition);
         // 放入单例bean对象缓存
         registerSingleton(beanName, beanObject);
         return beanObject;
     }
+
+    private void registerDisposableBeanIfNecessary(String beanName, Object bean, BeanDefinition beanDefinition) {
+        if (bean instanceof DisposableBean || StrUtil.isNotEmpty(beanDefinition.getDestroyMethodName())) {
+            registerDisposableBean(beanName, new DisposableBeanAdapter(bean, beanName, beanDefinition ));
+        }
+    }
+
 
     protected Object createBeanInstance(String name, BeanDefinition beanDefinition, Object[] args) throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
         Constructor constructorToUse = null;
@@ -44,6 +60,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             constructorToUse = findConstructor(beanDefinition.getBeanClass().getConstructors() , args);
         }
         // 根据指定实例化策略，实例化bean
+        log.info("实例化 " + name);
         return instantiationStrategy.instantiate(beanDefinition, name, constructorToUse, args);
     }
 
@@ -69,16 +86,36 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         // 1. 执行BeanPostProcessor Before处理
         Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(beanObject, beanName);
 
-        // 2. TODO 完成调用初始化方法的方法
-        invokeInitMethods(beanName, wrappedBean, beanDefinition);
+        // 2. 调用初始化方法
+        try {
+            invokeInitMethods(beanName, wrappedBean, beanDefinition);
+        } catch (Exception e) {
+            throw new BeansException("Invocation of init method of bean [" + beanName + "] failed!!", e);
+        }
 
         // 3. 执行BeanPostProcessor After处理
         wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
         return wrappedBean;
     }
 
-    private  void invokeInitMethods(String beanName, Object wrappedBean, BeanDefinition beanDefinition) {
+    private  void invokeInitMethods(String beanName, Object bean, BeanDefinition beanDefinition) throws Exception {
+        // 实现接口的方式。
+        if (bean instanceof InitializingBean) {
+            // 调用接口规范的afterPropertiesSet()方法
+            ((InitializingBean)bean).afterPropertiesSet();
+            return;
+        }
 
+        // init-method配置信息
+        String initMethodName = beanDefinition.getInitMethodName();
+        if (StrUtil.isNotEmpty(initMethodName)) {
+            Method initMethod = beanDefinition.getBeanClass().getMethod(initMethodName);
+            if (initMethod == null) {
+                throw new BeansException("Could not find an init method named '" +
+                        initMethodName + "' on bean with name '" + beanName + "'!!");
+            }
+            initMethod.invoke(bean);
+        }
     }
     @Override
     public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName) throws BeansException {

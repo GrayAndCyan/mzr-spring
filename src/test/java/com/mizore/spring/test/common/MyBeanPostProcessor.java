@@ -11,7 +11,7 @@ public class MyBeanPostProcessor implements BeanPostProcessor {
             UserService userService = (UserService) bean;
             userService.setLocation("改为：北京");
         }
-        return null;
+        return bean;
     }
 
     @Override

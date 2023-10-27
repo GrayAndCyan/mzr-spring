@@ -2,9 +2,11 @@ package com.mizore.spring.test.bean;
 
 
 import cn.hutool.core.lang.copier.SrcToDestCopier;
+import com.mizore.spring.beans.factory.DisposableBean;
+import com.mizore.spring.beans.factory.InitializingBean;
 import com.mizore.spring.test.bean.UserDao;
 
-public class UserService {
+public class UserService implements InitializingBean, DisposableBean {
 
     private UserDao userDao;
 
@@ -63,5 +65,15 @@ public class UserService {
 
     public void setCompany(String company) {
         this.company = company;
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        System.out.println("do userService.destroy()");
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        System.out.println("do userService.afterPropertiesSet()");
     }
 }

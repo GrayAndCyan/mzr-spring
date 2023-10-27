@@ -42,5 +42,37 @@ bean定义读取器依赖资源加载器与注册表，通过加载器拿到资�
   4. 注册BeanPostProcessor；
   5. 提前实例化一遍`beanDefinitionMap`中定义的bean。
 * 定义Spring中两个重要接口`BeanFactoryPostProcessor` 与`BeanPostProcessor`，
-它们实现类的处理方法分别在「`Bean` 对象注册后但实例化之前」和「`Bean` 对象实例化并属性注入之后，执行初始化方法前后」时执行。
+它们实现类的处理方法分别在「`Bean` 对象注册后但实例化之前」和「每个`Bean` 对象实例化并属性注入之后，执行初始化方法前后」时执行。
 分别体现在`AbstractApplicationContext`类和`AbstractAutowireCapableBeanFactory`类中。
+
+
+### step-07  bean初始化与销毁方法
+
+1. bean初始化方法在bean实例化并属性注入后被调用。bean销毁方法在虚拟机关闭时调用。
+2. 上述两个方法有两种方式声明：
+   1. 让注册为bean的类实现`InitializingBean`  `DisposableBean` 接口，实现初始化和销毁方法，这样方法会被框架主动调用（也就是非反射的常规调用方式）。
+   2. 在bean类中实现初始化和销毁方法，并在xml配置中指明方法名。这样方法会被框架以反射方式调用。
+3. 一种值得一提的分层设计：A类实现B接口、继承C类。B接口定义的方法在C类中实现。
+下图中的 `DefaultListableBeanFactory`类，`ConfigurableListableBeanFactory` 接口， `DefaultSingletonBeanRegistry` 类 便是这种关系，实现`destroySingletons()` 方法。维护了各司其职的单一职责原则。
+![DefaultListableBeanFactory.png](img%2FDefaultListableBeanFactory.png)
+
+4. **代理模式、装饰模式、适配器模式，傻傻分不清？**
+
+    代理模式与装饰器模式的区别在于：谁持有引用，或者说用户是否持有原对象的引用。
+试想大量应用装饰器模式的 Java IO 中的类，被装饰对象由用户持有引用并将其传入装饰器；而在代理模式，代理类目的就是对外屏蔽被代理对象，被代理对象是被代理类持有、使用和增强的。
+
+    两者都是对原对象的增强。
+
+    适配器模式与上面两个模式的区别在于：
+    1. 为了达到适配目的，它一定是改变了被适配对象的接口定义的。在装饰器模式中并不强调接口与原对象的一致性，但在代理模式中，代理类是提供与被代理对象完全一致的接口的，让用户就像直接调用原对象一样地调用了代理对象。
+    2. 适配器模式只做适配，不做功能增强或改变。目的不同，适配器的目的是适配，它不干扰被适配对象本该提供的功能。手机接口需要的是 Type-c 插头，我耳机是圆孔插头，那转接头（适配器）要做的只是接受圆孔插头， 对外提供 形为 Type-c 的服务，不干涉我耳机的原本功能。这在 Java 编码中体现为适配器类实现 Type-c 接口（定义了用户端需要的规范），实现 `offerTypeC()` 方法，供用户端调用。
+
+    `Spring` 的 `DisposableBeanAdapter` 类是使用了适配器模式的一个例子：
+
+    被适配对象是 `beanDefinition` ，调用方想要只是调用 `destroy()` 就完成「执行 `bean` 销毁方法」的工作。`beanDefinition` 提供的不是`destroy()` 这个接口，而是 `destroyMethodName` ，那么由 `DisposableBeanAdapter` 去做「持有功能提供者，统一对外接口」的工作。
+
+    那么这里为什么不在 `BeanDefinition` 中实现 `destroy()` ，然后调用方去调它的这个方法？
+
+    因为 `Spring` 提供多种 用户定义并指定`bean`销毁方法 的渠道，不止 “配置 `destroyMethodName` ”这一种，还有让 `bean` 类型实现 `DisposableBean` 接口的这种方式。这是不能在框架的调用处写死的，那不如在调用处只是调用 `DisposableBeanAdapter # destroy(Object bean, BeanDefinition beanDefinitio)`，而不必关心更多细节。
+    
+    这里的“调用处”，即供给 「注册的虚拟机关闭时的钩子函数」 的线程任务。
