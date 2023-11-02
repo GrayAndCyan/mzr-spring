@@ -7,12 +7,14 @@ import cn.hutool.core.util.StrUtil;
 import com.mizore.spring.beans.BeansException;
 import com.mizore.spring.beans.PropertyValue;
 import com.mizore.spring.beans.PropertyValues;
-import com.mizore.spring.beans.factory.DisposableBean;
-import com.mizore.spring.beans.factory.InitializingBean;
+import com.mizore.spring.beans.factory.*;
+import com.mizore.spring.beans.factory.aware.Aware;
 import com.mizore.spring.beans.factory.config.AutowireCapableBeanFactory;
 import com.mizore.spring.beans.factory.config.BeanDefinition;
 import com.mizore.spring.beans.factory.config.BeanPostProcessor;
 import com.mizore.spring.beans.factory.config.BeanReference;
+import com.mizore.spring.context.ApplicationContext;
+import com.mizore.spring.context.ApplicationContextAware;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Constructor;
@@ -83,6 +85,19 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     }
 
     private Object initializeBean(String beanName, Object beanObject, BeanDefinition beanDefinition) {
+
+        if (beanObject instanceof Aware) {
+            if (beanObject instanceof BeanFactoryAware) {
+                ((BeanFactoryAware)beanObject).setBeanFactory(this);
+            }
+            if (beanObject instanceof BeanClassLoaderAware) {
+                ((BeanClassLoaderAware)beanObject).setBeanClassLoader(getBeanClassLoader());
+            }
+            if (beanObject instanceof BeanNameAware) {
+                ((BeanNameAware)beanObject).setBeanName(beanName);
+            }
+        }
+
         // 1. 执行BeanPostProcessor Before处理
         Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(beanObject, beanName);
 

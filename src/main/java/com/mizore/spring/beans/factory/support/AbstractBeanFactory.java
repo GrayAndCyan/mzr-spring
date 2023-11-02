@@ -3,6 +3,7 @@ package com.mizore.spring.beans.factory.support;
 import com.mizore.spring.beans.factory.config.BeanDefinition;
 import com.mizore.spring.beans.factory.config.BeanPostProcessor;
 import com.mizore.spring.beans.factory.config.ConfigurableBeanFactory;
+import com.mizore.spring.util.ClassUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -12,6 +13,13 @@ import java.util.List;
 public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory {
 
     List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
+
+
+    private ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
+
+    public ClassLoader getBeanClassLoader() {
+        return classLoader;
+    }
 
     @Override
     public Object getBean(String name) {

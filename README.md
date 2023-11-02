@@ -76,3 +76,29 @@ bean定义读取器依赖资源加载器与注册表，通过加载器拿到资�
     因为 `Spring` 提供多种 用户定义并指定`bean`销毁方法 的渠道，不止 “配置 `destroyMethodName` ”这一种，还有让 `bean` 类型实现 `DisposableBean` 接口的这种方式。这是不能在框架的调用处写死的，那不如在调用处只是调用 `DisposableBeanAdapter # destroy(Object bean, BeanDefinition beanDefinitio)`，而不必关心更多细节。
     
     这里的“调用处”，即供给 「注册的虚拟机关闭时的钩子函数」 的线程任务。
+
+### step-08    Aware感知
+
+赋予bean获取所属`BeanFactory,` `BeanClassLoader`, `ApplicationContext`, `BeanName` 的能力，只需要让 bean 实现对应的 `Aware` 接口即可。
+具体做法如下：
+1. 定义了`BeanFactoryAware,` `BeanClassLoaderAware`, `ApplicationContextAware`, `BeanNameAware` 四个接口，定义 `setXXX()` 方法。
+在bean初始化时（更具体一点就是在执行bean后置处理器的beforeInitialization方法之前），判断bean是否继承了上述接口，如果是，框架调用上述接口定义的 `set`
+方法，通过把需要的框架对象（bean所属的`BeanFactory,` `BeanClassLoader``BeanName`）传参的方式，让bean可以持有和使用这些对象。
+2. bean所属`ApplicationContext` 的获取相对特殊，使用了一个继承 `BeanPostProcessor` 的 `ApplicationContextAwareProcessor`，它在 `postProcessBeforeInitialization()`
+方法对实现`ApplicationContextAware`接口的bean进行所属应用上下文对象的注入。那这个bean后置处理器是怎么拿到应用上下文对象的呢？在 `AbstractApplicationContext`执行 `refresh()` 方法中，
+创建了这个bean后置处理器，并在构造时给它提供了自身这个应用上下文对象。
+
+
+现在可以相对完整地说一下Bean的生命周期了：
+1. 以配置文件或注解的方式声明 `bean`；
+2. 读取配置文件或注解，创建对应的 `beanDefinition`；
+3. 注册 `bean` ,实际上是将对应的 `beanDefinition` 放入一个 `map` 容器中；
+4. 执行 `BeanFactoryPostProcessor` 的处理方法操作已注册的 `beanDefinition`；
+5. 实例化 `bean`；
+6. 为 `bean` 填充属性 （如果需要填充的属性是 bean引用 ， 那么先去执行这个新 bean 的创建工作（实例化、属性填充、感知、初始化、初始化前后处理方法））；
+7. `Aware` 感知，即上文所说，使实现特定 `Aware` 接口的 `bean` 获取到 特定的框架对象。
+8. 在调用 `bean` 自定义的初始化方法之前，先执行每个 `BeanPostProcessor` 的 `postProcessBeforeInitialization()` 方法；
+9. 调用 `bean` 自定义的初始化方法;
+10. 在调用 `bean` 自定义的初始化方法之后，执行每个 `BeanPostProcessor` 的 `postProcessAfterInitialization()` 方法；
+11. 使用 `bean`；
+12. 调用自定义的 `bean` 销毁方法，这发生在虚拟机关闭时的钩子函数中。

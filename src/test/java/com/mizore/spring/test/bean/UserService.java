@@ -2,11 +2,13 @@ package com.mizore.spring.test.bean;
 
 
 import cn.hutool.core.lang.copier.SrcToDestCopier;
-import com.mizore.spring.beans.factory.DisposableBean;
-import com.mizore.spring.beans.factory.InitializingBean;
+import com.mizore.spring.beans.BeansException;
+import com.mizore.spring.beans.factory.*;
+import com.mizore.spring.context.ApplicationContext;
+import com.mizore.spring.context.ApplicationContextAware;
 import com.mizore.spring.test.bean.UserDao;
 
-public class UserService implements InitializingBean, DisposableBean {
+public class UserService implements InitializingBean, DisposableBean, BeanFactoryAware, BeanClassLoaderAware, BeanNameAware, ApplicationContextAware {
 
     private UserDao userDao;
 
@@ -15,6 +17,9 @@ public class UserService implements InitializingBean, DisposableBean {
     private String uId;
     private String location;
     private String company;
+
+
+
     public void query() {
         System.out.println("query user...");
         System.out.println(userDao.queryUserName(uId));
@@ -75,5 +80,27 @@ public class UserService implements InitializingBean, DisposableBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         System.out.println("do userService.afterPropertiesSet()");
+    }
+
+    @Override
+    public void setBeanClassLoader(ClassLoader classLoader) {
+        System.out.println("get classLoader : " + classLoader);
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        System.out.println("get beanFactory : " + beanFactory);
+    }
+
+    @Override
+    public void setBeanName(String name) {
+        System.out.println("get beanName : " + name);
+
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        System.out.println("get applicationContext : " + applicationContext);
+
     }
 }
