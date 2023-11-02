@@ -95,7 +95,7 @@ bean定义读取器依赖资源加载器与注册表，通过加载器拿到资�
 3. 注册 `bean` ,实际上是将对应的 `beanDefinition` 放入一个 `map` 容器中；
 4. 执行 `BeanFactoryPostProcessor` 的处理方法操作已注册的 `beanDefinition`；
 5. 实例化 `bean`；
-6. 为 `bean` 填充属性 （如果需要填充的属性是 bean引用 ， 那么先去执行这个新 bean 的创建工作（实例化、属性填充、感知、初始化、初始化前后处理方法））；
+6. 为 `bean` 填充属性（属性信息是存储在 `beanDefinition` 中的，另外，如果需要填充的属性是 bean引用 ， 那么先去执行这个新 bean 的创建工作（实例化、属性填充、感知、初始化、初始化前后处理方法））；
 7. `Aware` 感知，即上文所说，使实现特定 `Aware` 接口的 `bean` 获取到 特定的框架对象。
 8. 在调用 `bean` 自定义的初始化方法之前，先执行每个 `BeanPostProcessor` 的 `postProcessBeforeInitialization()` 方法；
 9. 调用 `bean` 自定义的初始化方法;
