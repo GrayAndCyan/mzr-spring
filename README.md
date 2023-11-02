@@ -89,7 +89,7 @@ bean定义读取器依赖资源加载器与注册表，通过加载器拿到资�
 创建了这个bean后置处理器，并在构造时给它提供了自身这个应用上下文对象。
 
 
-现在可以相对完整地说一下Bean的生命周期了：
+**现在可以相对完整地说一下Bean的生命周期了：**
 1. 以配置文件或注解的方式声明 `bean`；
 2. 读取配置文件或注解，创建对应的 `beanDefinition`；
 3. 注册 `bean` ,实际上是注册对应的 `beanDefinition` ，将 `beanDefinition` 放入一个 `map` 容器中；
@@ -104,3 +104,19 @@ bean定义读取器依赖资源加载器与注册表，通过加载器拿到资�
 12. 如果定义的是单例 `bean` （默认单例），则将实例放入单例`bean`缓存（实际是一个`map`，下次取用时直接从`map`中取到`bean`实例而非再次创建实例）。
 13. 使用 `bean`；
 14. 调用自定义的 `bean` 销毁方法，这发生在虚拟机关闭时的钩子函数中。
+
+另外，非单例bean是进行第11步的，具体贴一段GPT：
+
+>在Spring框架中，默认情况下，单例作用域的Bean在容器关闭时会执行自定义的销毁方法，但非单例作用域的Bean并不会执行销毁方法。
+<br>这是因为Spring容器对于单例Bean和非单例Bean的生命周期管理方式不同。对于单例Bean，Spring容器负责创建、初始化和销毁它们，可以确保在容器关闭时调用销毁方法，以释放资源或执行清理操作。因此，单例Bean的销毁方法会被调用。
+<br>而对于非单例Bean，Spring容器在创建时将其交给应用程序管理，容器不负责跟踪和销毁这些Bean。这是因为非单例Bean可能具有更多的复杂性和特定的生命周期需求，例如原型作用域的Bean可能每次获取都需要创建新的实例。因此，Spring容器不会自动调用非单例Bean的销毁方法。
+<br>如果你需要在非单例Bean销毁时执行自定义的清理逻辑，你可以手动在Bean中实现DisposableBean接口或使用@PreDestroy注解来定义销毁方法。然后，在应用程序中，在不再需要非单例Bean时，显式地调用销毁方法。例如，可以通过使用ConfigurableBeanFactory的destroyBean()方法来销毁非单例Bean。
+
+```
+@Autowired
+private ConfigurableBeanFactory beanFactory;
+
+// 销毁非单例Bean
+beanFactory.destroyBean(nonSingletonBean);
+```
+> 总结起来，非单例Bean不执行自定义的销毁方法是因为Spring容器不负责跟踪和销毁这些Bean，但你可以手动在适当的时候调用销毁方法来执行清理操作。
