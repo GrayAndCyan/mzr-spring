@@ -79,6 +79,9 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
             String className = bean.getAttribute("class");
             String initMethod = bean.getAttribute("init-method");
             String destroyMethod = bean.getAttribute("destroy-method");
+            String beanScope = bean.getAttribute("scope");
+
+
             // 获取Class,方便获取类中的名称
             Class<?> clazz = Class.forName(className);
             // 优先级id > name
@@ -90,6 +93,11 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
             BeanDefinition beanDefinition = new BeanDefinition(clazz);
             beanDefinition.setInitMethodName(initMethod);
             beanDefinition.setDestroyMethodName(destroyMethod);
+
+            if (StrUtil.isNotEmpty(beanScope)) {
+                // 判空是为了避免null覆盖默认值（默认单例）
+                beanDefinition.setScope(beanScope);
+            }
             // 读取属性并填充
             for (int j = 0; j < bean.getChildNodes().getLength(); j++) {
                 // 找到属性标签

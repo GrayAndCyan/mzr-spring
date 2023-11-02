@@ -92,7 +92,7 @@ bean定义读取器依赖资源加载器与注册表，通过加载器拿到资�
 现在可以相对完整地说一下Bean的生命周期了：
 1. 以配置文件或注解的方式声明 `bean`；
 2. 读取配置文件或注解，创建对应的 `beanDefinition`；
-3. 注册 `bean` ,实际上是将对应的 `beanDefinition` 放入一个 `map` 容器中；
+3. 注册 `bean` ,实际上是注册对应的 `beanDefinition` ，将 `beanDefinition` 放入一个 `map` 容器中；
 4. 执行 `BeanFactoryPostProcessor` 的处理方法操作已注册的 `beanDefinition`；
 5. 实例化 `bean`；
 6. 为 `bean` 填充属性（属性信息是存储在 `beanDefinition` 中的，另外，如果需要填充的属性是 bean引用 ， 那么先去执行这个新 bean 的创建工作（实例化、属性填充、感知、初始化、初始化前后处理方法））；
@@ -100,5 +100,7 @@ bean定义读取器依赖资源加载器与注册表，通过加载器拿到资�
 8. 在调用 `bean` 自定义的初始化方法之前，先执行每个 `BeanPostProcessor` 的 `postProcessBeforeInitialization()` 方法；
 9. 调用 `bean` 自定义的初始化方法;
 10. 在调用 `bean` 自定义的初始化方法之后，执行每个 `BeanPostProcessor` 的 `postProcessAfterInitialization()` 方法；
-11. 使用 `bean`；
-12. 调用自定义的 `bean` 销毁方法，这发生在虚拟机关闭时的钩子函数中。
+11. 注册实现了 `DisposableBean` 接口的 `bean` （实际上是使用 `DisposableBeanAdapter` 适配器包装 `bean` 并存入一个「一次性beanMap」容器中）；
+12. 如果定义的是单例 `bean` （默认单例），则将实例放入单例`bean`缓存（实际是一个`map`，下次取用时直接从`map`中取到`bean`实例而非再次创建实例）。
+13. 使用 `bean`；
+14. 调用自定义的 `bean` 销毁方法，这发生在虚拟机关闭时的钩子函数中。
