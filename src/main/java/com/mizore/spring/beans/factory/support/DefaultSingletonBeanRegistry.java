@@ -10,6 +10,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
+    /**
+     * 空单例对象的内部标记：
+     * 用作ConcurrentHashMap（不支持 null 值）的标记值。
+     */
+    protected final static Object NULL_OBJECT = new Object();
 
     private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>();
     private final Map<String, DisposableBean> disposableBeanObjects = new ConcurrentHashMap<>();

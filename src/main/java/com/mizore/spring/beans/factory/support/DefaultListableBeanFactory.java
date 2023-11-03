@@ -25,7 +25,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
     @Override
     public BeanDefinition getBeanDefinition(String name) {
         BeanDefinition beanDefinition = beanDefinitionMap.get(name);
-        if (beanDefinition == null) throw new BeansException("No bean nameed " + name + "is definied");
+        if (beanDefinition == null) throw new BeansException("No bean named " + name + " is defined");
         return beanDefinition;
     }
 
@@ -33,7 +33,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
      * 提前实例化单例 ，也就是提前先getBean一遍map中的beanDefinition,bean会在getBean里实例化
      */
     @Override
-    public void preInstantiateSingletons() {
+    public void preInstantiateSingletons() throws BeansException{
         beanDefinitionMap.keySet().forEach(this::getBean);
     }
 

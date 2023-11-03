@@ -120,3 +120,20 @@ private ConfigurableBeanFactory beanFactory;
 beanFactory.destroyBean(nonSingletonBean);
 ```
 > 总结起来，非单例Bean不执行自定义的销毁方法是因为Spring容器不负责跟踪和销毁这些Bean，但你可以手动在适当的时候调用销毁方法来执行清理操作。
+
+
+
+### step-09 FactoryBean
+
+不是`BeanFactory`吗？`FactoryBean`是什么？
+
+`FactoryBean`是`Spring`框架供开发人员实现的一个接口，如果一个`bean`实现了这个接口并重写其规定的方法，那么这个`bean`就拥有了自行创建其他`bean`对象的能力。
+
+`FactoryBean`将创建`bean`实例的权力下放给开发人员，为`Spring`框架提供了更高的灵活性与扩展性。开发人员通过实现接口的`getObject()` `isSingleton()`方法，自行决定要创建的实例类型，是否是单例模式，如何创建。
+
+`FactoryBean`也是一个`bean`,会被`ioc`容器创建与持有，但在获取这个`bean`的时候，`Spring`框架返回的不是这个`bean`实例，而是它的`getObject()`方法所创建的对象。
+
+那么`getObject()`方法所创建的对象究竟算不算`bean`对象呢？算的，它的特殊之处在于，它的创建不是`ioc`管理的，而是由框架的使用者编写如何创建，但此后它可以被当作
+bean对待，原因其实上面讲过了，就是它会在任意尝试获取它的创造者FactoryBean时被得到，这一点体现在 `AbstractBeanFactory#getObjectForBeanInstance` 方法中。
+
+另外一提，这些由 `FactoryBean` 创建的`bean`实例，如果是单例，那会被缓存在单独一个单例缓存`map`中，具体见 `FactoryBeanRegistrySupport` 这个类。

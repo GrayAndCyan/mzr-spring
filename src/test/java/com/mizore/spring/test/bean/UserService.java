@@ -10,7 +10,7 @@ import com.mizore.spring.test.bean.UserDao;
 
 public class UserService implements InitializingBean, DisposableBean, BeanFactoryAware, BeanClassLoaderAware, BeanNameAware, ApplicationContextAware {
 
-    private UserDao userDao;
+    private IUserDao userDao;
 
     private String name;
 
@@ -32,11 +32,11 @@ public class UserService implements InitializingBean, DisposableBean, BeanFactor
         return super.hashCode();
     }
 
-    public UserDao getUserDao() {
+    public IUserDao getUserDao() {
         return userDao;
     }
 
-    public void setUserDao(UserDao userDao) {
+    public void setUserDao(IUserDao userDao) {
         this.userDao = userDao;
     }
 

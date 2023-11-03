@@ -65,6 +65,10 @@ public class BeanDefinition {
 
     public void setScope(String scope) {
         this.scope = scope;
+        if ("prototype".equals(scope)) {
+            isSingleton = false;
+            isPrototype = true;
+        }
     }
 
     public boolean isSingleton() {

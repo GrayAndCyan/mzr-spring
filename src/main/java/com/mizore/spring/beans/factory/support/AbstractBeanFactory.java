@@ -1,5 +1,7 @@
 package com.mizore.spring.beans.factory.support;
 
+import com.mizore.spring.beans.BeansException;
+import com.mizore.spring.beans.factory.FactoryBean;
 import com.mizore.spring.beans.factory.config.BeanDefinition;
 import com.mizore.spring.beans.factory.config.BeanPostProcessor;
 import com.mizore.spring.beans.factory.config.ConfigurableBeanFactory;
@@ -10,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory {
+public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport implements ConfigurableBeanFactory {
 
     List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
 
@@ -22,17 +24,17 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     }
 
     @Override
-    public Object getBean(String name) {
+    public Object getBean(String name) throws BeansException {
         return doGetBean(name, null);
     }
 
     @Override
-    public Object getBean(String name, Object... args) {
+    public Object getBean(String name, Object... args) throws BeansException {
         return doGetBean(name, args);
     }
 
     @Override
-    public <T> T getBean(String name, Class<T> requiredType) {
+    public <T> T getBean(String name, Class<T> requiredType) throws BeansException {
         return (T)getBean(name);
     }
 
@@ -43,17 +45,34 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
      * @param args
      * @return
      */
-    protected Object doGetBean(String name, Object[] args) {
+    protected Object doGetBean(String name, Object[] args) throws BeansException {
         // 在DefaultSingletonBeanRegistry的缓存中获取单例bean对象
         if (containsSingleton(name)) {
             log.info("获取到缓存的单例bean对象: {}",name);
-            return getSingleton(name);
+//            return getSingleton(name);
+            // 不再直接返回获取的单例bean对象，而是检查是不是factoryBean,是的话，返回它所创建的对象；不是则返回原单例bean对象
+            return getObjectForBeanInstance(getSingleton(name), name);
         }
 
         // 未获取到单例bean对象，拿到bean定义去实例化bean
         BeanDefinition beanDefinition = getBeanDefinition(name);
 
-        return createBean(name, beanDefinition, args);
+//        return createBean(name, beanDefinition, args);
+        // 这里也是，不再直接返回创建的bean对象，而是检查这个对象是不是factoryBean,是的话，返回它所创建的对象；不是则返回原对象
+        return getObjectForBeanInstance(createBean(name, beanDefinition, args), name);
+    }
+
+    private Object getObjectForBeanInstance(Object beanInstance, String beanName) throws BeansException {
+        if (! (beanInstance instanceof FactoryBean<?>)) {
+            return beanInstance;
+        }
+        // beanInstance 是 factoryBean，不返回它，返回它该创建的对象（它该创建什么对象？怎么创建？是否单例？这是由编写该FactoryBean实现类的开发人员决定的）
+        // 先尝试从缓存中拿
+        Object object = getCacheObjectForFactoryBean(beanName);
+        if (object == null) {
+            getObjectFromFactoryBean((FactoryBean<?>) beanInstance, beanName);
+        }
+        return object;
     }
 
 

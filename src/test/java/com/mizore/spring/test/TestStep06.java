@@ -10,7 +10,7 @@ import org.junit.Test;
 
 public class TestStep06 {
     @Test
-    public void testWithoutBeanFactoryPostProcessorAndBeanPostProcessor01() {
+    public void testWithoutBeanFactoryPostProcessorAndBeanPostProcessor01() throws Exception {
         DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(beanFactory);
         reader.loadBeanDefinitions("classpath:spring.xml");
