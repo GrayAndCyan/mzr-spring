@@ -1,5 +1,9 @@
 package com.mizore.spring.util;
 
+import com.mizore.spring.context.ApplicationListener;
+import net.bytebuddy.implementation.Implementation;
+import net.sf.cglib.proxy.Proxy;
+
 public class ClassUtils {
 
     public static ClassLoader getDefaultClassLoader() {
@@ -14,5 +18,19 @@ public class ClassUtils {
             cl = ClassUtils.class.getClassLoader();
         }
         return cl;
+    }
+
+    public static boolean isProxySubClass(Class<?> targetClass) {
+        return Proxy.isProxyClass(targetClass) || isByteBuddyProxyClass(targetClass);
+    }
+    private static boolean isByteBuddyProxyClass(Class<?> clazz) {
+        while (clazz != null) {
+            ClassLoader classLoader = clazz.getClassLoader();
+            if (classLoader != null && classLoader.getClass().getName().equals("net.bytebuddy.dynamic.loading.ByteArrayClassLoader")) {
+                return true;
+            }
+            clazz = clazz.getSuperclass();
+        }
+        return false;
     }
 }

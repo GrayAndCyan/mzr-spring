@@ -1,7 +1,6 @@
 package com.mizore.spring.beans.factory.support;
 
 
-
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mizore.spring.beans.BeansException;
@@ -13,8 +12,6 @@ import com.mizore.spring.beans.factory.config.AutowireCapableBeanFactory;
 import com.mizore.spring.beans.factory.config.BeanDefinition;
 import com.mizore.spring.beans.factory.config.BeanPostProcessor;
 import com.mizore.spring.beans.factory.config.BeanReference;
-import com.mizore.spring.context.ApplicationContext;
-import com.mizore.spring.context.ApplicationContextAware;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Constructor;
@@ -94,31 +91,39 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
     private Object initializeBean(String beanName, Object beanObject, BeanDefinition beanDefinition) {
 
-        if (beanObject instanceof Aware) {
-            if (beanObject instanceof BeanFactoryAware) {
-                ((BeanFactoryAware)beanObject).setBeanFactory(this);
-            }
-            if (beanObject instanceof BeanClassLoaderAware) {
-                ((BeanClassLoaderAware)beanObject).setBeanClassLoader(getBeanClassLoader());
-            }
-            if (beanObject instanceof BeanNameAware) {
-                ((BeanNameAware)beanObject).setBeanName(beanName);
-            }
-        }
+        // 1. bean可能实现了感知接口，在此判断并调用感知方法
+        invokeAwareMethods(beanName, beanObject);
 
-        // 1. 执行BeanPostProcessor Before处理
+        // 2. 执行BeanPostProcessor Before处理
         Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(beanObject, beanName);
 
-        // 2. 调用初始化方法
+        // 3. 调用初始化方法
         try {
             invokeInitMethods(beanName, wrappedBean, beanDefinition);
         } catch (Exception e) {
             throw new BeansException("Invocation of init method of bean [" + beanName + "] failed!!", e);
         }
 
-        // 3. 执行BeanPostProcessor After处理
+        // 4. 执行BeanPostProcessor After处理
         wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
         return wrappedBean;
+    }
+
+    /**
+     * bean可能实现了感知接口，在此判断并调用感知方法
+     */
+    private void invokeAwareMethods(String beanName, Object beanObject) {
+        if (beanObject instanceof Aware) {
+            if (beanObject instanceof BeanFactoryAware) {
+                ((BeanFactoryAware) beanObject).setBeanFactory(this);
+            }
+            if (beanObject instanceof BeanClassLoaderAware) {
+                ((BeanClassLoaderAware) beanObject).setBeanClassLoader(getBeanClassLoader());
+            }
+            if (beanObject instanceof BeanNameAware) {
+                ((BeanNameAware) beanObject).setBeanName(beanName);
+            }
+        }
     }
 
     private  void invokeInitMethods(String beanName, Object bean, BeanDefinition beanDefinition) throws Exception {

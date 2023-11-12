@@ -137,3 +137,42 @@ beanFactory.destroyBean(nonSingletonBean);
 bean对待，原因其实上面讲过了，就是它会在任意尝试获取它的创造者FactoryBean时被得到，这一点体现在 `AbstractBeanFactory#getObjectForBeanInstance` 方法中。
 
 另外一提，这些由 `FactoryBean` 创建的`bean`实例，如果是单例，那会被缓存在单独一个单例缓存`map`中，具体见 `FactoryBeanRegistrySupport` 这个类。
+
+
+### step-10 容器事件定义、发布、广播与监听
+
+`Spring` 的事件功能模块基于观察者模式也叫发布订阅模式，由事件、发布者、广播器、监听者这几部分组成来实现应用事件发布监听的功能。
+
+#### 事件定义：
+
+编写事件类并继承 `ApplicationContextEvent`，`Spring` 已经定义好了 `ContextRefreshEvent` `ApplicationEventMulticaster` 等事件。
+在特定事件发生时对应的事件对象会被创建并被发布者广播给监听者。
+
+#### 事件发布：
+
+实现 `ApplicationEventPublisher` 接口，当前类则拥有发布事件的功能，充当某个或某些事件的发布者，如抽象应用上下文类实现了这个接口：
+    
+  * 在 `refresh()` 方法中发布容器刷新事件；
+  * 在容器关闭时由钩子函数调用的 `close()` 方法中发布容器关闭事件；
+  * 我们也可以获取应用上下文，调用发布方法发布自定义的事件。
+
+发布的实现需要**应用事件广播器**的支持。
+
+#### 事件广播：
+
+事件广播器是事件发布者所依赖的组件，发布者通过调用广播器的广播方法，将指定事件传达给对该事件感兴趣的、注册在广播器的监听者们。
+
+由上，广播器主要起到注册监听者与执行事件传达的作用。
+
+注册监听者： 实际上是将 `ioc` 中的所有实现了 `ApplicationListener` 的`bean`对象加入到由广播器持有的一个监听者集合。
+
+执行事件传达： 在监听者集合中遍历查找对指定事件感兴趣的监听者（何为感兴趣？见下文），调用它们的 `onApplicationEvent(E event)` 方法。
+
+抽象应用上下文类便是在 `refresh()` 方法中做了初始化广播器并注册监听者到广播器的工作。这是需要事件发布者做的，发布事件所必要的工作。
+
+#### 事件监听：
+
+想让编写的类型成为某个事件的监听者，需要该类型实现 `ApplicationListener<E extends ApplicationEvent>` 接口，在泛型部分指定感兴趣的事件（也就是要监听的事件）。
+并注册为 `bean` （ `xml` 或注解）， 这样才能由 `ioc` 将这个监听者注册到广播器中（体现在上面所说的 `refresh()`方法）。
+
+实现上述接口后需要实现接口定义的 `onApplicationEvent(E event)` 方法， 这个方法表明了 **当监听者被通知到感兴趣的事件发生了时该做些什么动作**。 由广播器负责调用，这一点上文有说。

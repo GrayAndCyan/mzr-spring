@@ -39,7 +39,7 @@ public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
 
     public void destroySingletons() {
         Object[] disposableBeanNames = disposableBeanObjects.keySet().toArray();
-        // 边遍历边移除 倒序遍历
+        // 边遍历边移除 并调用bean销毁方法 倒序遍历
         for (int i = disposableBeanNames.length - 1; i >= 0; i--) {
             Object beanName = disposableBeanNames[i];
             DisposableBean disposableBean = disposableBeanObjects.remove(beanName);

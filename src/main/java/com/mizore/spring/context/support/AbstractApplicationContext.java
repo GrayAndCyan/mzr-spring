@@ -5,13 +5,22 @@ import com.mizore.spring.beans.core.io.DefaultResourceLoader;
 import com.mizore.spring.beans.factory.config.BeanFactoryPostProcessor;
 import com.mizore.spring.beans.factory.config.BeanPostProcessor;
 import com.mizore.spring.beans.factory.support.ConfigurableListableBeanFactory;
+import com.mizore.spring.context.ApplicationEvent;
+import com.mizore.spring.context.ApplicationListener;
 import com.mizore.spring.context.ConfigurableApplicationContext;
+import com.mizore.spring.context.event.ApplicationEventMulticaster;
+import com.mizore.spring.context.event.ContextCloseEvent;
+import com.mizore.spring.context.event.ContextRefreshEvent;
+import com.mizore.spring.context.event.SimpleApplicationEventMulticaster;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 public abstract class AbstractApplicationContext extends DefaultResourceLoader implements ConfigurableApplicationContext {
 
+    private static final String APPLICATION_EVENT_MULTICASTER_BEAN_NAME = "applicationEventMulticaster";
+
+    private ApplicationEventMulticaster applicationEventMulticaster;
     @Override
     public void registerShutDownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(this::close));
@@ -19,6 +28,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
 
     @Override
     public void close() {
+        // 发布容器关闭事件
+        publishEvent(new ContextCloseEvent(this));
         getBeanFactory().destroySingletons();
     }
 
@@ -31,7 +42,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         // 1. 创建BeanFactory,并加载BeanDefinition
         refreshBeanFactory();
 
-        // 2. 获取BeanFactory
+        // 2. 获取BeanFactory     getBeanFactory()是一个模板方法，实现下放给子类AbstractRefreshableApplicationContext
         ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 
         // 3. 添加ApplicationContextAwareProcessor，让继承ApplicationContextAware的bean能够感知到所属的这个ApplicationContext
@@ -44,8 +55,40 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         // 5. BeanPostProcessor 需要在其他Bean对象实例化之前执行注册操作
         registryBeanProcessors(beanFactory);
 
-        // 6. 提前实例化单例bean对象
+        // 6. 初始化事件广播器
+        initApplicationEventMulticaster();
+
+        // 7. 注册事件监听者
+        registerListeners();
+
+        // 8. 提前实例化单例bean对象
         beanFactory.preInstantiateSingletons();
+
+        // 9. 发布容器刷新完成事件
+        finishRefresh();
+    }
+
+    private void finishRefresh() {
+        publishEvent(new ContextRefreshEvent(this));
+    }
+
+
+    private void initApplicationEventMulticaster() {
+        ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+        applicationEventMulticaster = new SimpleApplicationEventMulticaster(beanFactory);
+        beanFactory.registerSingleton(APPLICATION_EVENT_MULTICASTER_BEAN_NAME, applicationEventMulticaster);
+    }
+
+    private void registerListeners() {
+        Collection<ApplicationListener> listeners = getBeansOfType(ApplicationListener.class).values();
+        for (ApplicationListener listener : listeners) {
+            applicationEventMulticaster.addApplicationListener(listener);
+        }
+
+    }
+    @Override
+    public void publishEvent(ApplicationEvent event) {
+        applicationEventMulticaster.multicastEvent(event);
     }
 
     protected abstract void refreshBeanFactory() throws BeansException;

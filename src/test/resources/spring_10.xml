@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+    <bean class="com.mizore.spring.test.event.ContextCloseEventListener"/>
+    <bean class="com.mizore.spring.test.event.ContextRefreshEventListener"/>
+    <bean class="com.mizore.spring.test.event.CustomListener"/>
+</beans>
