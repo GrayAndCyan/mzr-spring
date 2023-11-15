@@ -1,9 +1,6 @@
 package com.mizore.spring.test.bean;
 
 import com.mizore.spring.beans.factory.FactoryBean;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +16,6 @@ public class ProxyBeanFactory implements FactoryBean<IUserDao> {
         return (IUserDao) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
                 new Class[]{IUserDao.class},
                 (proxy, method, args) -> {
-
                     Map<String, String> hashMap = new HashMap<>();
                     hashMap.put("10001", "mizore");
                     hashMap.put("10002", "八杯水");

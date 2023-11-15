@@ -8,7 +8,7 @@ import com.mizore.spring.context.ApplicationContext;
 import com.mizore.spring.context.ApplicationContextAware;
 import com.mizore.spring.test.bean.UserDao;
 
-public class UserService implements InitializingBean, DisposableBean, BeanFactoryAware, BeanClassLoaderAware, BeanNameAware, ApplicationContextAware {
+public class UserService implements IUserService,InitializingBean, DisposableBean, BeanFactoryAware, BeanClassLoaderAware, BeanNameAware, ApplicationContextAware {
 
     private IUserDao userDao;
 
@@ -20,9 +20,10 @@ public class UserService implements InitializingBean, DisposableBean, BeanFactor
 
 
 
+    @Override
     public void query() {
         System.out.println("query user...");
-        System.out.println(userDao.queryUserName(uId));
+//        System.out.println(userDao.queryUserName(uId));
         System.out.println("location: " + location);
         System.out.println("company: " + company);
     }

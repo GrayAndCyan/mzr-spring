@@ -2,8 +2,6 @@ package com.mizore.spring.beans.factory.support;
 
 import com.mizore.spring.beans.BeansException;
 import com.mizore.spring.beans.factory.FactoryBean;
-
-import java.io.ObjectStreamException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
