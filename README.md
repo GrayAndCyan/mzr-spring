@@ -179,7 +179,7 @@ bean对待，原因其实上面讲过了，就是它会在任意尝试获取它�
 
 #### 定义事件与监听者，在时机来临时获取应用上下文对象调用发布事件方法——这是Spring使用者对其事件功能的基本使用。
 
-### step-11 基于Jdk动态代理的SpringAOP
+### step-11 基于Jdk动态代理的AOP
 
 面向切面编程，是并列于 PP 、 OOP 的一种编程思想。软件开发需要解决业务需求与系统需求，当 OOP 被很好地用来解决业务需求时，一些系统需求仍难以对付——
 比如统计方法耗时、日志监控、接口幂等性处理等，它们需要在程序的某些节点（ `JoinPoint` ）处执行，但如果在每处调用这些横切逻辑会带来系统需求对业务需求
@@ -195,3 +195,22 @@ SpringAOP 是一个基于Java的 AOP 框架，采用Jdk动态代理与Cglib字�
 SpringAOP的做法大致是： 将目标对象、切入点表达式、方法拦截器封装到 `advised` 交给Jdk/Cglib代理工厂类，代理工厂类用于生成被织入横切逻辑的代理对象： 
 根据 切入点表达式`Pointcut` 匹配需要织入横切逻辑的连接点 `JoinPoint`， 对于匹配的连接点使用反射调用 执行用户编写在方法拦截器的横切逻辑，不匹配则正常调用。
 
+### step-12 把 AOP 扩展到bean的生命周期
+
+在 `AbstractAutowireCapableBeanFactory#createBean`方法中，原本是直接调 `doCreateBean()` 去做策略实例化、属性注入、aware注入、施加beanPost处理、调用初始化方法
+这一系列动作的；现在是在调 `doCreateBean()` 之前，先调用 `resolveBeanBeforeInstantiation()` ，这个方法作用是，在以往实例化之前，调实现了 `InstantiationAwareBeanPostProcessor`
+接口的bean后处理器的实例化前置处理方法 `postProcessBeforeInstantiation()`，如果bean是使用aop功能的bean，那么该方法代替 `doCreateBean`完成实例化和应用beanPostProcessors实例化后置处理的动作，
+但得到的实例化对象是织入aop横切逻辑的Jdk/Cglib代理对象。
+
+目前的实现方法有缺陷——使用aop功能的bean（也就是目标JoinPoint所在的bean）绕过了 `doCreateBean`，那也就没有去做属性注入、aware注入、施加beanPost初始化前置处理、调用初始化方法，
+失去了这些功能。下面两图是 `OrderService` 使用aop前后的对比结果：
+
+为 `OrderService` 注入 `UserService`，并打印 `OrderService#getUserService` ：
+
+![without_pointcut_advisor.png](img%2Fwithout_pointcut_advisor.png)
+
+使用aop后，注入失败，打印结果为 `null` ：
+
+![with_pointcut_advisor.png](img%2Fwith_pointcut_advisor.png)
+
+可以 `resolveBeanBeforeInstantiation()` 方法的实例化让bean失去了依赖注入等功能。

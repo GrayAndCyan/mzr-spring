@@ -23,4 +23,10 @@ public class OrderService implements IOrderService{
         }
         return "查询订单成功！！";
     }
+
+    private IUserService userService;
+    @Override
+    public IUserService getUserService() {
+        return userService;
+    }
 }

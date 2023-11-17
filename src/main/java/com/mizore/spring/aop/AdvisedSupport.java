@@ -12,6 +12,17 @@ public class AdvisedSupport {
 
     private MethodMatcher methodMatcher;
 
+    // 代理目标类的话，使用cglib代理；否则使用jdk动态代理去代理接口
+    private boolean proxyTargetClass = false;
+
+    public boolean isProxyTargetClass() {
+        return proxyTargetClass;
+    }
+
+    public void setProxyTargetClass(boolean proxyTargetClass) {
+        this.proxyTargetClass = proxyTargetClass;
+    }
+
     public TargetSource getTargetSource() {
         return targetSource;
     }

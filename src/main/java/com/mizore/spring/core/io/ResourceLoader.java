@@ -1,4 +1,4 @@
-package com.mizore.spring.beans.core.io;
+package com.mizore.spring.core.io;
 
 public interface ResourceLoader {
 

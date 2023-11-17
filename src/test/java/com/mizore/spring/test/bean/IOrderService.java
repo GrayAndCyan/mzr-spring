@@ -5,4 +5,6 @@ public interface IOrderService {
     String create(String orderId);
 
     String query();
+
+    IUserService getUserService();
 }

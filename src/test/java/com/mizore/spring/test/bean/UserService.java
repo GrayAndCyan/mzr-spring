@@ -23,7 +23,7 @@ public class UserService implements IUserService,InitializingBean, DisposableBea
     @Override
     public void query() {
         System.out.println("query user...");
-//        System.out.println(userDao.queryUserName(uId));
+        System.out.println(userDao.queryUserName(uId));
         System.out.println("location: " + location);
         System.out.println("company: " + company);
     }

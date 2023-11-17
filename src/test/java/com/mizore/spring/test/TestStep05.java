@@ -2,8 +2,8 @@ package com.mizore.spring.test;
 
 
 import cn.hutool.core.io.IoUtil;
-import com.mizore.spring.beans.core.io.DefaultResourceLoader;
-import com.mizore.spring.beans.core.io.Resource;
+import com.mizore.spring.core.io.DefaultResourceLoader;
+import com.mizore.spring.core.io.Resource;
 import com.mizore.spring.beans.factory.support.DefaultListableBeanFactory;
 import com.mizore.spring.beans.factory.xml.XmlBeanDefinitionReader;
 import com.mizore.spring.test.bean.UserService;

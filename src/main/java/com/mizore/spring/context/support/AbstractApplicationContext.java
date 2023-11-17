@@ -1,7 +1,7 @@
 package com.mizore.spring.context.support;
 
 import com.mizore.spring.beans.BeansException;
-import com.mizore.spring.beans.core.io.DefaultResourceLoader;
+import com.mizore.spring.core.io.DefaultResourceLoader;
 import com.mizore.spring.beans.factory.config.BeanFactoryPostProcessor;
 import com.mizore.spring.beans.factory.config.BeanPostProcessor;
 import com.mizore.spring.beans.factory.support.ConfigurableListableBeanFactory;

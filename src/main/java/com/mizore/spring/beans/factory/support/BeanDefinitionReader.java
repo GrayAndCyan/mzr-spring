@@ -1,7 +1,7 @@
 package com.mizore.spring.beans.factory.support;
 
-import com.mizore.spring.beans.core.io.Resource;
-import com.mizore.spring.beans.core.io.ResourceLoader;
+import com.mizore.spring.core.io.Resource;
+import com.mizore.spring.core.io.ResourceLoader;
 
 public interface BeanDefinitionReader {
 

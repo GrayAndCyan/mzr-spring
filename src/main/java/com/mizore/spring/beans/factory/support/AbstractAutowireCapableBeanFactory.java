@@ -8,10 +8,7 @@ import com.mizore.spring.beans.PropertyValue;
 import com.mizore.spring.beans.PropertyValues;
 import com.mizore.spring.beans.factory.*;
 import com.mizore.spring.beans.factory.aware.Aware;
-import com.mizore.spring.beans.factory.config.AutowireCapableBeanFactory;
-import com.mizore.spring.beans.factory.config.BeanDefinition;
-import com.mizore.spring.beans.factory.config.BeanPostProcessor;
-import com.mizore.spring.beans.factory.config.BeanReference;
+import com.mizore.spring.beans.factory.config.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Constructor;
@@ -27,6 +24,41 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     private InstantiationStrategy instantiationStrategy = new ByteBuddySubClassingInstantiationStrategy();
     @Override
     protected Object createBean(String beanName, BeanDefinition beanDefinition, Object[] args) {
+        // 尝试创建用于aop的代理bean对象，若这个bean未使用aop增强则返回null,执行下面doCreateBean的流程
+        Object proxyBeanObject;
+        if ((proxyBeanObject = resolveBeanBeforeInstantiation(beanName, beanDefinition)) != null) {
+            return proxyBeanObject;
+        }
+
+        return doCreateBean(beanName, beanDefinition, args);
+    }
+
+    /**
+     * 尝试创建用于aop的代理bean对象，若这个bean未使用aop增强则返回null,执行doCreateBean的流程
+     * @return 若这个bean未使用aop增强则返回null，若这个bean是需要使用aop的则创建并返回织入横切逻辑的代理类的对象
+     */
+    private Object resolveBeanBeforeInstantiation(String name, BeanDefinition beanDefinition) {
+        Object bean = applyBeanPostProcessorsBeforeInstantiation(beanDefinition.getBeanClass(), name);
+        if (bean != null) {
+            // 实例化了，但是是织入横切逻辑的代理对象
+            bean = applyBeanPostProcessorsAfterInitialization(bean, name);
+        }
+        return bean;
+    }
+
+    private Object applyBeanPostProcessorsBeforeInstantiation(Class beanClass, String name) {
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+                Object result = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessBeforeInstantiation(beanClass, name);
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Object doCreateBean(String beanName, BeanDefinition beanDefinition, Object[] args) {
         Object beanObject;
         try {
             // bean实例化

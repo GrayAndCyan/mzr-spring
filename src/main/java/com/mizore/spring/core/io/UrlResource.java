@@ -1,8 +1,7 @@
-package com.mizore.spring.beans.core.io;
+package com.mizore.spring.core.io;
 
 import cn.hutool.core.lang.Assert;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
