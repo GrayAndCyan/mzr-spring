@@ -1,15 +1,16 @@
 package com.mizore.spring.test.bean;
 
 
-import cn.hutool.core.lang.copier.SrcToDestCopier;
 import com.mizore.spring.beans.BeansException;
 import com.mizore.spring.beans.factory.*;
 import com.mizore.spring.context.ApplicationContext;
 import com.mizore.spring.context.ApplicationContextAware;
-import com.mizore.spring.test.bean.UserDao;
+import com.mizore.spring.stereotype.Component;
 
+@Component("myUserService")
 public class UserService implements IUserService,InitializingBean, DisposableBean, BeanFactoryAware, BeanClassLoaderAware, BeanNameAware, ApplicationContextAware {
 
+    private String token = "${token}";
     private IUserDao userDao;
 
     private String name;
@@ -19,6 +20,25 @@ public class UserService implements IUserService,InitializingBean, DisposableBea
     private String company;
 
 
+    @Override
+    public String toString() {
+        return "UserService{" +
+                "userDao=" + userDao +
+                ", name='" + name + '\'' +
+                ", uId='" + uId + '\'' +
+                ", location='" + location + '\'' +
+                ", company='" + company + '\'' +
+                ", token='" + token + '\'' +
+                '}';
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
 
     @Override
     public void query() {

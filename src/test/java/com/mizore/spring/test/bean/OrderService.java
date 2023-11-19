@@ -4,6 +4,24 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class OrderService implements IOrderService{
+    private String token;
+
+    @Override
+    public String toString() {
+        return "OrderService{" +
+                "token='" + token + '\'' +
+                ", userService=" + userService +
+                '}';
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
     @Override
     public String create(String orderId) {
         try {

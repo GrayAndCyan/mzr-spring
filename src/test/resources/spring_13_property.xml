@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/integration/scripting"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/integration/scripting"
+       xsi:schemaLocation="http://www.springframework.org/schema/integration/scripting">
+
+    <bean class="com.mizore.spring.beans.factory.PropertyPlaceHolderConfigurer">
+        <property name="location" value="classpath:token.properties"/>
+    </bean>
+
+    <bean class="com.mizore.spring.test.bean.OrderService">
+        <property name="token" value="${token}"/>
+    </bean>
+    <context:component-scan base-package="com.mizore.spring.test.bean"/>
+</beans>

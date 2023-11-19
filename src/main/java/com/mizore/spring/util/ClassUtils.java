@@ -1,5 +1,6 @@
 package com.mizore.spring.util;
 
+import cn.hutool.core.util.StrUtil;
 import com.mizore.spring.context.ApplicationListener;
 import net.bytebuddy.implementation.Implementation;
 import net.sf.cglib.proxy.Proxy;
@@ -32,5 +33,9 @@ public class ClassUtils {
             clazz = clazz.getSuperclass();
         }
         return false;
+    }
+
+    public static String getDefaultBeanName(Class<?> beanClass) {
+        return StrUtil.lowerFirst(StrUtil.toCamelCase(beanClass.getSimpleName()));
     }
 }

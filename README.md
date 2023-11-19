@@ -214,3 +214,21 @@ SpringAOP的做法大致是： 将目标对象、切入点表达式、方法拦�
 ![with_pointcut_advisor.png](img%2Fwith_pointcut_advisor.png)
 
 可以 `resolveBeanBeforeInstantiation()` 方法的实例化让bean失去了依赖注入等功能。
+
+### step-13 包扫描Component注解与beanFactoryPost处理占位符
+
+#### beanFactoryPost处理占位符
+
+处理占位符是用了一个beanFactory后置处理器 `PropertyPlaceHolderConfigurer`，作用是：
+在所有`BeanDefinition`加载完成后，实例化bean对象之前，修改 `BeanDefinition`： 处理占位符——用配置文件的属性替换掉占位符表示的字符串值。所以这个beanFactory
+后置处理器需要能加载指定的属性配置文件，并为`beanDefinition`的符合占位符要求的`propertyValue`的值进行替换。
+
+#### 包扫描Component注解注册为bean
+
+使用`hutool`提供的`ClassUtil`工具类做 在 `xml`文件配置的扫描包路径下扫描加了指定注解的 `class`，由此得到加了`@Component`注解的类，
+为这些类创建对应的`beanDefinition`，放入`beanDefinition`的注册器。这一步并没有做为每个`beanDefinition`填充好属性。
+
+综上，做到这里，如果为加了自定义注解`@Component`的类写属性`String token = "${token}"`，占位符替换是不会生效的——因为占位符处理器处理的是定义在`beanDefinition`的
+`private PropertyValues propertyValues` 这里的属性，而目前通过注解定义bean的方式，在创建对应的`beanDefinition`后没有做 `PropertyValues` 的填充工作。这是下一步要完善的。
+
+
