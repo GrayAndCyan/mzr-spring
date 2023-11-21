@@ -3,6 +3,8 @@ package com.mizore.spring.test.bean;
 
 import com.mizore.spring.beans.BeansException;
 import com.mizore.spring.beans.factory.*;
+import com.mizore.spring.beans.factory.annotation.Autowired;
+import com.mizore.spring.beans.factory.annotation.Value;
 import com.mizore.spring.context.ApplicationContext;
 import com.mizore.spring.context.ApplicationContextAware;
 import com.mizore.spring.stereotype.Component;
@@ -10,7 +12,10 @@ import com.mizore.spring.stereotype.Component;
 @Component("myUserService")
 public class UserService implements IUserService,InitializingBean, DisposableBean, BeanFactoryAware, BeanClassLoaderAware, BeanNameAware, ApplicationContextAware {
 
-    private String token = "${token}";
+    @Value("${token}")
+    private String token;
+
+    @Autowired
     private IUserDao userDao;
 
     private String name;

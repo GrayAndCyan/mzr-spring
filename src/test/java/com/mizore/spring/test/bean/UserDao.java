@@ -1,9 +1,12 @@
 package com.mizore.spring.test.bean;
 
+import com.mizore.spring.stereotype.Component;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class UserDao {
+@Component
+public class UserDao implements IUserDao{
     private static Map<String, String> hashMap = new HashMap<>();
 
     public void initDataMethod() {

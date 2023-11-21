@@ -9,6 +9,8 @@ import com.mizore.spring.beans.factory.config.BeanFactoryPostProcessor;
 import com.mizore.spring.beans.factory.support.ConfigurableListableBeanFactory;
 import com.mizore.spring.core.io.DefaultResourceLoader;
 import com.mizore.spring.core.io.Resource;
+import com.mizore.spring.util.StringValueResolver;
+
 import java.io.IOException;
 import java.util.Properties;
 
@@ -41,27 +43,53 @@ public class PropertyPlaceHolderConfigurer implements BeanFactoryPostProcessor {
                     if (!(value instanceof String strVal)) {
                         continue;
                     }
-                    StringBuilder buffer = new StringBuilder(strVal);
-                    int startIdx = strVal.indexOf(DEFAULT_PLACEHOLDER_PREFIX), stopIdx = strVal.indexOf(DEFAULT_PLACEHOLDER_SUFFIX);
-                    if (startIdx != -1 && stopIdx != -1 && startIdx < stopIdx) {
-                        // 获取占位符中的属性名
-                        String propKey = strVal.substring(startIdx + 2, stopIdx);
-                        // 去属性配置文件中找这个属性
-                        String propVal = properties.getProperty(propKey);
-                        if (StrUtil.isBlank(propVal)) {
-                            throw new BeansException("占位符内的属性名有误！！");
-                        }
-                        buffer.replace(startIdx, stopIdx + 1, propVal);
-                        propertyValue.setValue(buffer.toString());
-                    }
+                    propertyValue.setValue(resolvePlaceholder(properties, strVal));
                 }
             }
+
+            // 向容器中添加字符串解析器，供@Value注解使用
+            StringValueResolver valueResolver = new PlaceholderResolvingStringValueResolver(properties);
+            beanFactory.addEmbeddedValueResolver(valueResolver);
+
         } catch (IOException e) {
             throw new BeansException("Could not load properties", e);
+
         }
+    }
+
+    private static String resolvePlaceholder(Properties properties,String strVal) {
+        StringBuilder buffer = new StringBuilder(strVal);
+        int startIdx = strVal.indexOf(DEFAULT_PLACEHOLDER_PREFIX), stopIdx = strVal.indexOf(DEFAULT_PLACEHOLDER_SUFFIX);
+        if (startIdx != -1 && stopIdx != -1 && startIdx < stopIdx) {
+            // 获取占位符中的属性名
+            String propKey = strVal.substring(startIdx + 2, stopIdx);
+            // 去属性配置文件中找这个属性
+            String propVal = properties.getProperty(propKey);
+            if (StrUtil.isBlank(propVal)) {
+                throw new BeansException("占位符内的属性名有误！！");
+            }
+            buffer.replace(startIdx, stopIdx + 1, propVal);
+            return buffer.toString();
+        }
+        return strVal;
     }
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    private class PlaceholderResolvingStringValueResolver implements StringValueResolver {
+
+        // 配置文件中的属性
+        private final Properties properties;
+
+        public PlaceholderResolvingStringValueResolver(Properties properties) {
+            this.properties = properties;
+        }
+
+        @Override
+        public String resolveStringValue(String strVal) {
+            return PropertyPlaceHolderConfigurer.this.resolvePlaceholder(properties, strVal);
+        }
     }
 }

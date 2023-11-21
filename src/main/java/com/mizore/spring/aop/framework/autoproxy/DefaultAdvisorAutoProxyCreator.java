@@ -4,6 +4,7 @@ import com.mizore.spring.aop.*;
 import com.mizore.spring.aop.aspectj.AspectJExpressionPointcutAdvisor;
 import com.mizore.spring.aop.framework.ProxyFactory;
 import com.mizore.spring.beans.BeansException;
+import com.mizore.spring.beans.PropertyValues;
 import com.mizore.spring.beans.factory.BeanFactory;
 import com.mizore.spring.beans.factory.BeanFactoryAware;
 import com.mizore.spring.beans.factory.config.InstantiationAwareBeanPostProcessor;
@@ -44,6 +45,11 @@ public class DefaultAdvisorAutoProxyCreator implements InstantiationAwareBeanPos
 
             return new ProxyFactory(advisedSupport).getProxy();
         }
+        return null;
+    }
+
+    @Override
+    public PropertyValues postProcessPropertyValues(PropertyValues pvs, Object bean, String beanName) throws BeansException {
         return null;
     }
 

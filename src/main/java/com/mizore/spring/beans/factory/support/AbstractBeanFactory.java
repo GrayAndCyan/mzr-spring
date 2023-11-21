@@ -6,6 +6,7 @@ import com.mizore.spring.beans.factory.config.BeanDefinition;
 import com.mizore.spring.beans.factory.config.BeanPostProcessor;
 import com.mizore.spring.beans.factory.config.ConfigurableBeanFactory;
 import com.mizore.spring.util.ClassUtils;
+import com.mizore.spring.util.StringValueResolver;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -16,8 +17,26 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
     List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
 
-
     private ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
+
+    /**
+     * String resolvers to apply e.g. to annotation attribute values
+     */
+    private final List<StringValueResolver> embeddedValueResolvers = new ArrayList<>();
+
+    @Override
+    public void addEmbeddedValueResolver(StringValueResolver valueResolver) {
+        this.embeddedValueResolvers.add(valueResolver);
+    }
+
+    @Override
+    public String resolveEmbeddedValue(String value) {
+        String result = value;
+        for (StringValueResolver resolver : embeddedValueResolvers) {
+            result = resolver.resolveStringValue(result);
+        }
+        return result;
+    }
 
     public ClassLoader getBeanClassLoader() {
         return classLoader;

@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 /**
  * 实例化bean类
@@ -63,6 +64,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         try {
             // bean实例化
             beanObject = createBeanInstance(beanName, beanDefinition, args);
+            // 在设置bean属性之前，允许BeanPostProcessor 修改属性值，比如 AutoWiredAnnotationBeanPostProcess
+            applyBeanProcessorsBeforeApplyingPropertyValues(beanDefinition, beanObject, beanName);
             // 填充bean的属性
             applyPropertyValues(beanName, beanObject, beanDefinition);
             // 执行bean的初始化方法和BeanPostProcessor的前置和后置处理方法
@@ -79,6 +82,17 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             registerSingleton(beanName, beanObject);
         }
         return beanObject;
+    }
+
+    protected void applyBeanProcessorsBeforeApplyingPropertyValues(BeanDefinition beanDefinition, Object bean, String beanName) {
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor instantiationAwareBeanPostProcessor) {
+                PropertyValues propertyValues = instantiationAwareBeanPostProcessor.postProcessPropertyValues(beanDefinition.getPropertyValues(), bean, beanName);
+                for (PropertyValue pv : propertyValues.getPropertyValues()) {
+                    beanDefinition.getPropertyValues().addPropertyValue(pv);
+                }
+            }
+        }
     }
 
     private void registerDisposableBeanIfNecessary(String beanName, Object bean, BeanDefinition beanDefinition) {

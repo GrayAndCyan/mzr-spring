@@ -231,4 +231,47 @@ SpringAOP的做法大致是： 将目标对象、切入点表达式、方法拦�
 综上，做到这里，如果为加了自定义注解`@Component`的类写属性`String token = "${token}"`，占位符替换是不会生效的——因为占位符处理器处理的是定义在`beanDefinition`的
 `private PropertyValues propertyValues` 这里的属性，而目前通过注解定义bean的方式，在创建对应的`beanDefinition`后没有做 `PropertyValues` 的填充工作。这是下一步要完善的。
 
+### step-14 基于注解的bean的字段注入
 
+上一步说到，使用注解注册的bean没有属性填充，那么在这一步就实现了基于注解的依赖注入。
+
+#### 注解
+
+主体是这三个注解： `@Autowired` `@Qualifier` `@Value`
+
+下面先分别介绍下作用：
+
+`@Value`:
+
+要注入的依赖分为值类型与引用类型，该注解解决的是值的注入，底层依赖于字符串值解析器，支持自定义的值解析规则。只要编写 `StringValueResolver`接口的实现类，就能自定义对 `@Value`
+值的解析，可以定义自己的值注入与解析规则。比如内部类 `PlaceholderResolvingStringValueResolver` 是在指定属性配置文件中匹配 `${}` 格式的占位符所表示的属性。
+可以有多个字符串值解析器去解析这个注解的值，Spring在处理这个注解时，会遍历这些字符串解析器的解析方法 `String resolveStringValue(String s)`。当然，也可以直接使用字面值，而不走一些特殊的解析规则，不过这样意义不大了。
+
+<br>
+
+`@Autowired`： 
+
+很常用的Spring注解，用来解决为bean定义字段的引用依赖。依赖的对象一定是ioc中的其他bean。该注解优先根据类型去获取依赖对象，当ioc中该类型有多个bean时，
+会按照所加在的字段的字段名来匹配苯二胺那么与之一致的bean。
+
+常与 `@Qualifier`、 `@Primary` 配合使用，前者下面会说，先说下后者： 还是当ioc中该类型有多个bean时，优先装配带有 `@Primary` 注解的bean。
+
+也经常用来与 `@Resource` 注解比较，`@Resource`是J2EE提供的，`@Autowired`是Spring提供的，但两者Spring都是支持的。另外`@Resource`默认按name
+匹配，但也支持设置注解属性来让它按类型匹配。我觉得在「优先按什么匹配」这个方面比较这两个注解没有意义，甚至不太值得去刻意记。反而 `@Autowired` 可以通过
+ `required` 属性设置非必要依赖这点更值得一提（这两个注解默认都是必要依赖，也就是依赖找不到会抛异常或报error，都会让项目启动失败）。
+ **`@Autowired` 比  `@Resource` 多支持了非必要依赖**，区别注意这点就够了。
+<br>
+
+`@Qualifier`：
+
+与 `@Autowired` 配合使用，`@Qualifier` 会指定一个beanName，当ioc中依赖类型有多个bean时，优先按照`@Qualifier`指定的beanName来装配。
+
+#### 实现
+
+基于注解依赖注入的实现主要靠 `AutoWiredAnnotationBeanPostProcess` 核心方法是 `postProcessPropertyValues()` ,这个方法由 `InstantiationAwareBeanPostProcessor`
+接口定义，发挥作用的时机是每个bean实例化后且属性填充前，提供了对「尚未填充属性的bean实例」的操作支持。`AutoWiredAnnotationBeanPostProcess` 的
+做法就是在`postProcessPropertyValues()`方法中扫描bean字段上的目标注解并做相应的依赖注入的处理。
+
+`InstantiationAwareBeanPostProcessor`这个接口值得一提，它继承了`BeanPostProcessor`，却总在特殊的时间点发挥作用——`BeanPostProcessor`
+通常在每个bean的初始化前后调用处理方法，但`InstantiationAwareBeanPostProcessor`接口打破了这一规定，它能在bean实例化前基于注解实例化bean，也能在bean填充属性前基于
+注解为bean注入依赖。可以发现，它的特殊性都与注解离不开关系，而注解是Java在1.5才引入的，所以我猜想这个特殊性的引入，是Spring为了支持注解（jdk1.5才引入）的被迫之举。

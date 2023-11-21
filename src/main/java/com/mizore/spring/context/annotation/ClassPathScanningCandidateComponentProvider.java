@@ -20,7 +20,6 @@ public class ClassPathScanningCandidateComponentProvider {
         Set<Class<?>> classes = ClassUtil.scanPackageByAnnotation(basePackage, Component.class);
         for (Class<?> clazz : classes) {
             BeanDefinition beanDefinition = new BeanDefinition(clazz);
-            // TODO 为beanDefinition填充属性
             candidates.add(beanDefinition);
         }
         return candidates;
