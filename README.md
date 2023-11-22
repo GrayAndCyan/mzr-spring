@@ -1,5 +1,8 @@
 # mzr-spring
+
 为加深理解Spring框架源码而完成的学习性项目，手写简易的Spring框架。
+
+以 https://github.com/fuzhengwei/small-spring 该学习项目为主要参考，感谢。
 
 ### step-01
 * 实现简易的bean容器，编写bean定义类与bean工厂类。
@@ -205,7 +208,7 @@ SpringAOP的做法大致是： 将目标对象、切入点表达式、方法拦�
 目前的实现方法有缺陷——使用aop功能的bean（也就是目标JoinPoint所在的bean）绕过了 `doCreateBean`，那也就没有去做属性注入、aware注入、施加beanPost初始化前置处理、调用初始化方法，
 失去了这些功能。下面两图是 `OrderService` 使用aop前后的对比结果：
 
-为 `OrderService` 注入 `UserService`，并打印 `OrderService#getUserService` ：
+不使用，aop为 `OrderService` 注入 `UserService`，并打印 `OrderService#getUserService` ：
 
 ![without_pointcut_advisor.png](img%2Fwithout_pointcut_advisor.png)
 
@@ -275,3 +278,36 @@ SpringAOP的做法大致是： 将目标对象、切入点表达式、方法拦�
 `InstantiationAwareBeanPostProcessor`这个接口值得一提，它继承了`BeanPostProcessor`，却总在特殊的时间点发挥作用——`BeanPostProcessor`
 通常在每个bean的初始化前后调用处理方法，但`InstantiationAwareBeanPostProcessor`接口打破了这一规定，它能在bean实例化前基于注解实例化bean，也能在bean填充属性前基于
 注解为bean注入依赖。可以发现，它的特殊性都与注解离不开关系，而注解是Java在1.5才引入的，所以我猜想这个特殊性的引入，是Spring为了支持注解（jdk1.5才引入）的被迫之举。
+
+### step-15 给代理对象设置属性注入
+
+这一步解决了**step-12**所说的问题——aop代理对象没有走`doCreateBean()`流程导致的一些功能缺失，具体解决做法是将 `DefaultAdvisorAutoProxyCreator`
+类中创建对象的工作从 `postProcessBeforeInstantiation()` 方法迁移到了 `postProcessAfterInitialization()` 方法。
+
+由于前者方法是在bean实例化之前操作对应的bean定义，是通过反射创建一个全新的目标对象并生成其代理对象返回，由此结束了 `AbstractAutowireCapableBeanFactory#createBean()` 方法
+。**step-12**中也说了，这么做会避开一些bean生命周期的必要步骤，所以改为在`postProcessAfterInitialization()` 方法，基于经过`doCreateBean()`方法实例化初始化后的bean对象，
+去生成它的代理对象并返回，这样代理对象相当于做了此前确实的步骤。
+
+之前是这样生成目标对象的：
+
+```java
+        TargetSource targetSource = null;
+        try {
+            targetSource = new TargetSource(beanClass.getDeclaredConstructor().newInstance());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+```
+
+现在改为了用完成初始化之后的bean对象，作为代理的目标对象：
+
+```java
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        // ......
+        // 由反射创建新对象，改为了基于传来的初始化完成之后的bean对象，来创建它的代理对象
+        TargetSource targetSource = new TargetSource(bean);
+        // ......
+    }
+```
+

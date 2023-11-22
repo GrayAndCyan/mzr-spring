@@ -1,22 +1,28 @@
 package com.mizore.spring.aop;
 
+import com.mizore.spring.util.ClassUtils;
+
 // 包装目标对象
 public class TargetSource {
 
-    private Object targetObject;
+    private final Object targetObject;
 
-    private Class<?>[] targetClass;
 
     public TargetSource(Object targetObject) {
         this.targetObject = targetObject;
-        this.targetClass = targetObject.getClass().getInterfaces();
     }
 
     public Object getTargetObject() {
         return targetObject;
     }
 
+    /**
+     * 获取target对象的接口信息
+     * 这个target可能是jdk代理创建的也可能是cglib创建，为了保证都能正确地得到结果，需要判断代理类型
+     */
     public Class<?>[] getTargetClass() {
-        return targetClass;
+        Class<?> clazz = this.targetObject.getClass();
+        clazz = ClassUtils.isProxySubClass(clazz) ? clazz.getSuperclass() : clazz;
+        return clazz.getInterfaces();
     }
 }
