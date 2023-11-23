@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
+
 public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport implements ConfigurableBeanFactory {
 
     List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
@@ -67,8 +67,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
     protected Object doGetBean(String name, Object[] args) throws BeansException {
         // 在DefaultSingletonBeanRegistry的缓存中获取单例bean对象
         if (containsSingleton(name)) {
-            log.info("获取到缓存的单例bean对象: {}",name);
-//            return getSingleton(name);
+            // return getSingleton(name);
             // 不再直接返回获取的单例bean对象，而是检查是不是factoryBean,是的话，返回它所创建的对象；不是则返回原单例bean对象
             return getObjectForBeanInstance(getSingleton(name), name);
         }
@@ -81,6 +80,15 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
         return getObjectForBeanInstance(createBean(name, beanDefinition, args), name);
     }
 
+    /**
+     * 检查beanInstance有没有实现FactoryBean接口
+     * 如是，则不返回它，而是返回它的getObject()方法所创建得到的对象
+     * 不是那就直接返回beanInstance
+     * @param beanInstance 待检验的bean实例
+     * @param beanName
+     * @return
+     * @throws BeansException
+     */
     private Object getObjectForBeanInstance(Object beanInstance, String beanName) throws BeansException {
         if (! (beanInstance instanceof FactoryBean<?>)) {
             return beanInstance;

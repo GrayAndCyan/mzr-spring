@@ -19,7 +19,7 @@ import java.util.Map;
  * 本BeanPostProcess主要是在bean实例化之后调用postProcessPropertyValues()方法发挥根据注解給bean填充属性的作用
  */
 @Component
-public class AutoWiredAnnotationBeanPostProcess implements InstantiationAwareBeanPostProcessor, BeanFactoryAware {
+public class AutowiredAnnotationBeanPostProcessor implements InstantiationAwareBeanPostProcessor, BeanFactoryAware {
 
     private ConfigurableListableBeanFactory beanFactory;
     @Override
@@ -87,16 +87,21 @@ public class AutoWiredAnnotationBeanPostProcess implements InstantiationAwareBea
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        return null;
+        return bean;
     }
 
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        return null;
+        return bean;
     }
 
     @Override
     public Object postProcessBeforeInstantiation(Class<?> clazz, String beanName) {
         return null;
+    }
+
+    @Override
+    public boolean postProcessAfterInstantiation(Object bean, String beanName) throws BeansException {
+        return true;
     }
 }

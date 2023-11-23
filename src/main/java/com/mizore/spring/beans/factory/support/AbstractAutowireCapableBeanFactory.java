@@ -25,9 +25,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     private InstantiationStrategy instantiationStrategy = new ByteBuddySubClassingInstantiationStrategy();
     @Override
     protected Object createBean(String beanName, BeanDefinition beanDefinition, Object[] args) {
-        // 在实例化前解析并处理beanDefinition，得到bean对象， 不走doCreateBean的实例化初始化流程
+        // 在实例化前解析并处理beanDefinition
         Object bean;
         if ((bean = resolveBeanBeforeInstantiation(beanName, beanDefinition)) != null) {
+            // 得到代理bean对象，不走doCreateBean的实例化初始化流程
             return bean;
         }
 
@@ -39,24 +40,70 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         try {
             // bean实例化
             beanObject = createBeanInstance(beanName, beanDefinition, args);
+
+            // 处理循环依赖，将实例化后的bean对象提前放入缓存中暴露出来
+            if (beanDefinition.isSingleton()) {
+                Object finalBean = beanObject;
+                addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, beanDefinition, finalBean));
+            }
+
+            // 实例化后判断
+            boolean continueWithPropertyPopulation = applyBeanPostProcessorsAfterInstantiation(beanName, beanObject);
+            if (!continueWithPropertyPopulation) {
+                return beanObject;
+            }
+
             // 在设置bean属性之前，允许BeanPostProcessor 修改属性值，比如 AutoWiredAnnotationBeanPostProcess
             applyBeanProcessorsBeforeApplyingPropertyValues(beanDefinition, beanObject, beanName);
             // 填充bean的属性
             applyPropertyValues(beanName, beanObject, beanDefinition);
             // 执行bean的初始化方法和BeanPostProcessor的前置和后置处理方法
             beanObject = initializeBean(beanName, beanObject, beanDefinition);
+            // 此后，beanObject可能是aop代理对象
         } catch (Exception e) {
             throw new BeansException("Instantiation of bean failed",e);
         }
         // 注册实现了DisposableBean接口的对象
         registerDisposableBeanIfNecessary(beanName,beanObject, beanDefinition);
 
-        // 单例bean判断
+        // 单例bean判断，是单例则放入一级缓存同时从二三级移除
         if (beanDefinition.isSingleton()) {
-            // 如果定义的是单例bean：放入单例bean对象缓存
             registerSingleton(beanName, beanObject);
         }
         return beanObject;
+    }
+
+    protected Object getEarlyBeanReference(String beanName, BeanDefinition beanDefinition, Object bean) {
+        Object exposedObject = bean;
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+                exposedObject = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).getEarlyBeanReference(exposedObject, beanName);
+                if (null == exposedObject) return exposedObject;
+            }
+        }
+
+        return exposedObject;
+    }
+
+    /**
+     * Bean 实例化后对于返回 false 的对象，不在执行后续设置 Bean 对象属性的操作
+     *
+     * @param beanName
+     * @param bean
+     * @return
+     */
+    private boolean applyBeanPostProcessorsAfterInstantiation(String beanName, Object bean) {
+        boolean continueWithPropertyPopulation = true;
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+                InstantiationAwareBeanPostProcessor instantiationAwareBeanPostProcessor = (InstantiationAwareBeanPostProcessor) beanPostProcessor;
+                if (!instantiationAwareBeanPostProcessor.postProcessAfterInstantiation(bean, beanName)) {
+                    continueWithPropertyPopulation = false;
+                    break;
+                }
+            }
+        }
+        return continueWithPropertyPopulation;
     }
 
     /**
@@ -135,6 +182,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         }
     }
 
+    /**
+     * 经过applyBeanPostProcessorsAfterInitialization，initializeBean返回的可能是aop代理对象
+     */
     private Object initializeBean(String beanName, Object beanObject, BeanDefinition beanDefinition) {
 
         // 1. bean可能实现了感知接口，在此判断并调用感知方法

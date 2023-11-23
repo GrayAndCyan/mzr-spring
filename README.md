@@ -311,3 +311,53 @@ SpringAOP的做法大致是： 将目标对象、切入点表达式、方法拦�
     }
 ```
 
+### step-16 三级缓存解决循环依赖
+
+看到这四个字大概都能理解了，bean的依赖关系形成环，这包括一个bean的自身依赖与多个bean参与的环形依赖，那么这些bean构成了循环依赖。
+
+自己想一下解决方法也很好想到，首先依赖注入不能是通过构造器注入（构造器注入使bean的实例化与依赖注入合并成了原子操作），想解决循环依赖必须承认一种
+「已实例化但尚未完成依赖注入」这样的一种bean状态，这里把这样的bean称为半成品bean，半成品bean可以被注入到依赖它的其他bean中。
+
+于是每当bean实例化后就将其放入一个半成品bean容器作为缓存，之后再进行依赖注入，保证有其他bean依赖它的话能从半成品bean缓存中拿到目标bean的引用。
+
+这样的一个一级缓存可以解决简单场景下的循环依赖。
+
+Spring采用的是三级缓存的做法，在 `DefaultSingletonBeanRegistry` 中分别创建成品bean容器、半成品bean容器、工厂对象容器：
+
+```java
+    // 一级缓存 存放成品bean实例
+    private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
+
+    // 二级缓存，存放半成品bean实例，也就是bean实例化后但尚未填充属性
+    private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(16);
+
+    // 三级缓存，存放ObjectFactory类型工厂对象
+    private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
+```
+
+设三级缓存而非一级主要是应对Spring框架的复杂性、bean对象类型多样性。
+
+* `createBean()` 的结果放入一级缓存，这是我们最终要用到的bean。
+
+* 而二级缓存存放实例化后尚未创建完成的bean，二级缓存的设置区别了成品bean与半成品bean，bean创建完成后放入一级缓存并及时从二级缓存中移除，避免了可能的空指针隐患
+
+* 第三级缓存的设置是出于代理对象的考虑，在Spring中，有时我们真正需要的是代理对象而非原生bean对象，比如AOP功能的代理对象。
+第三级缓存存放的值是 `ObjectFactory<?>` 类型的对象，实际上这是一个函数式接口，接口方法是`T getObject()`，所以不如理解为第三级缓存存放的是 `beanName`以及对应 `beanObject` 的创建逻辑。
+对于使用了AOP的bean， `getObject()` 方法获取到对应bean的aop代理对象。每次三级缓存工厂对象的 `getObject()`的调用，都会将获取的对象放入二级缓存—— 这是我们真正需要用到的对象。
+
+在 `createBean()` 结束后，该方法返回的代理对象引用会存入一级缓存，同时移除二三级缓存，这发生在`DefaultSingletonBeanRegistry#getSingleton(String beanName, ObjectFactory<?> singletonFactory)`。
+
+第三级缓存的这种设计保证了在尝试获取bean对象时拿到的是我们真正需要的bean对象，比如我们需要AOP增强的代理对象，而非原生bean对象。
+
+举例说明一下Spring解决循环依赖的流程，并且是使用了AOP代理的情形：
+
+![dpdcy_cir.jpg](img/dpdcy_cir.jpg)
+
+
+
+
+
+
+
+
+
