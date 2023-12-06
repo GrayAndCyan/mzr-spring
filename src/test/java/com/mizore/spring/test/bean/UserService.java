@@ -12,6 +12,8 @@ import com.mizore.spring.stereotype.Component;
 @Component("myUserService")
 public class UserService implements IUserService,InitializingBean, DisposableBean, BeanFactoryAware, BeanClassLoaderAware, BeanNameAware, ApplicationContextAware {
 
+    // 循环依赖
+    private IOrderService orderService;
     @Value("${token}")
     private String token;
 

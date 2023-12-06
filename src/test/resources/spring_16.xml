@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+<!--    定义循环的两个依赖-->
+    <bean id="orderService" class="com.mizore.spring.test.bean.OrderService">
+        <property name="userService" ref="userService"/>
+    </bean>
+    <bean id="userService" class="com.mizore.spring.test.bean.UserService">
+        <property name="orderService" ref="orderService"/>
+    </bean>
+"/>
+</beans>

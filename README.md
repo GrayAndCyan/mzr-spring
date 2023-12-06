@@ -351,7 +351,7 @@ Spring采用的是三级缓存的做法，在 `DefaultSingletonBeanRegistry` 中
 
 举例说明一下Spring解决循环依赖的流程，并且是使用了AOP代理的情形：
 
-![dpdcy_cir.jpg](img/dpdcy_cir.jpg)
+![dpdcy_cir.jpg](img%2Fdpdcy_cir.jpg)
 
 
 

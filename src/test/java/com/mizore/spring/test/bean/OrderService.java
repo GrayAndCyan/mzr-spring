@@ -42,6 +42,7 @@ public class OrderService implements IOrderService{
         return "查询订单成功！！";
     }
 
+    // 循环依赖
     private IUserService userService;
     @Override
     public IUserService getUserService() {

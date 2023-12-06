@@ -172,7 +172,6 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
                 Object value = pv.getValue();
                 if (value instanceof BeanReference) {
                     // beanA依赖beanB，获取beanB的实例，来更新value。递归操作。
-                    // TODO 未处理循环依赖
                     value = getBean(((BeanReference) value).getBeanName());
                 }
                 BeanUtil.setFieldValue(beanObject, name, value);
