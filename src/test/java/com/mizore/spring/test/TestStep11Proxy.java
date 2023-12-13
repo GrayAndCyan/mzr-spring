@@ -13,6 +13,7 @@ import com.mizore.spring.test.bean.OrderService;
 import com.mizore.spring.test.bean.UserService;
 import com.mizore.spring.test.interceptor.OrderServiceInterceptor;
 import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationHandler;
@@ -59,21 +60,24 @@ public class TestStep11Proxy {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 if (methodMatcher.matches(method, userService.getClass())) {
-                    MethodInterceptor methodInterceptor = methodInvocation -> {
-                        long begin = System.currentTimeMillis();
-                        try {
-                            return methodInvocation.proceed();
-                        } finally {
+                    MethodInterceptor methodInterceptor = new MethodInterceptor() {
+                        @Override
+                        public Object invoke(MethodInvocation methodInvocation) throws Throwable {
                             System.out.println("Begin by AOP");
+                            long begin = System.currentTimeMillis();
                             System.out.println("方法名： " + method.getName());
-                            long end = System.currentTimeMillis();
-                            System.out.println("method spend /ms: " + (end - begin));
+                            try {
+                                return methodInvocation.proceed();
+                            } finally {
+                                long end = System.currentTimeMillis();
+                                System.out.println("method spend /ms: " + (end - begin));
+                            }
                         }
                     };
                     return methodInterceptor.invoke(new ReflectiveMethodInvocation(userService, method, args));
                 }
                 // 不匹配
-                return method.invoke(proxy, args);
+                return method.invoke(userService, args);
             }
         });
         // 使用代理对象
